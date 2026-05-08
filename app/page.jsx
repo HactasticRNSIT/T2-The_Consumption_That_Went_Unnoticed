@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef,  } from "react";
+import SliderInput from "@/app/components/SliderInput";
 
 // ─── Types & Constants ───────────────────────────────────────────────────────
 
@@ -406,8 +407,9 @@ export default function EcoLensApp() {
   const [chatOpen, setChatOpen] = useState(false);
   const [activeChallenge, setActiveChallenge] = useState(null);
   const [showResults, setShowResults] = useState(false);
-  const [dashRef, dashInView] = useInView(0.1);
-  const [heroRef, heroInView] = useInView(0.1);
+  const newLocal = 0.1;
+  const [dashRef] = useInView(newLocal );
+  const [heroRef, heroInView] = useInView( 0.1 );
 
   const handleAnalyze = () => {
     const r = calculateResults(inputs);
@@ -502,7 +504,7 @@ export default function EcoLensApp() {
               {" "}of Waste
             </h1>
             <p style={{ fontSize: 18, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, maxWidth: 560, marginBottom: 40 }}>
-              EcoLens AI reveals your waste footprint, money leakage, and future environmental impact in seconds. See what you've been missing.
+              EcoLens AI reveals your waste footprint, money leakage, and future environmental impact in seconds.{"See what you've been missing."}
             </p>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               <button onClick={() => document.getElementById("assessment")?.scrollIntoView({ behavior: "smooth" })}
