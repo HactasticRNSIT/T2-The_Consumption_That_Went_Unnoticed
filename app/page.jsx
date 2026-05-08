@@ -25,17 +25,26 @@ const WASTE_COMPARISONS = [
   { max: 25, icon: "🪑", label: "Full office chair", desc: "Something you sit on daily" },
   { max: 60, icon: "🛵", label: "Small scooter", desc: "A vehicle you could ride" },
   { max: 120, icon: "🧊", label: "2 refrigerators", desc: "Appliances that cool your home" },
+  { max: 500, icon: "🌋", label: "Small volcano of waste", desc: "A significant environmental impact" },
   { max: 999, icon: "⛰️", label: "Mini mountain of trash", desc: "A serious environmental burden" },
+  { max: Infinity, icon: "🏔️", label: "Massive mountain of waste", desc: "An urgent call to action" },
 ];
 
 const CHAT_RESPONSES = {
   "kitchen waste": "Great question! Start by composting food scraps — fruit peels, coffee grounds, and vegetable cuttings make excellent compost. Store groceries properly to avoid spoilage, plan meals weekly, and buy only what you need. Even small changes can cut kitchen waste by 40%.",
+  "wet waste":"Great question! Start by composting food scraps — fruit peels, coffee grounds, and vegetable cuttings make excellent compost. Store groceries properly to avoid spoilage, plan meals weekly, and buy only what you need. Even small changes can cut kitchen waste by 40%.",
   "bottled water": "Switch to a stainless steel or glass bottle with a filter. A ₹800 bottle pays for itself in 2 months vs. buying ₹20 water bottles daily. In India, a Tata Swach or Kent filter can also purify tap water safely and cheaply.",
   "food delivery": "Batch your food orders to 1-2 times a week instead of daily. Ask restaurants to skip cutlery and extra packaging. Opt for delivery platforms that use eco-packaging. Cooking even 3 meals at home per week can cut delivery waste by 43%.",
   "clothing": "Buy fewer, better-quality pieces. Explore second-hand shops, clothing swaps, and brands like No Nasties or Doodlage that use sustainable materials. Extend garment life by washing in cold water and air drying.",
-  "electronics": "Before replacing a device, explore repair. iFixit guides help for phones and laptops. Many Indian cities have affordable repair shops. Extending your phone's life by just one year saves ~50kg of e-waste.",
+  "electronic": "Before replacing a device, explore repair. iFixit guides help for phones and laptops. Many Indian cities have affordable repair shops. Extending your phone's life by just one year saves ~50kg of e-waste.",
+  "paper": "Adopting digital paperless workflow,printing double-sided, reusing scrap paper,and recycling whenever possible.",
+  "metal":"Reduce metal waste by prioritizing the 5 Rs—refuse, reduce, reuse, repurpose, and recycle—such as buying in bulk, repairing items, and properly segregating scrap for recycling.",
+  "plastic":"Minimize plastic waste by using reusable alternatives, avoiding single-use plastics, supporting brands with sustainable packaging, and participating in local recycling programs to ensure proper disposal.",
+  "toys":"Minimize plastic waste by using reusable alternatives, avoiding single-use plastics, supporting brands with sustainable packaging, and participating in local recycling programs to ensure proper disposal.",
   "default": "I'm EcoLens AI! Ask me about reducing kitchen waste, alternatives to bottled water, food delivery impact, sustainable clothing, or electronics longevity. I'm here to help you live lighter on the planet. 🌱",
 };
+
+
 
 // ─── Utility Functions ───────────────────────────────────────────────────────
 
@@ -236,48 +245,96 @@ function DonutChart({ data }) {
   );
 }
 
-function FiveYearChart({ current, improved }) {
+function FiveYearChart({ original, current, improved }) {
   const years = [0, 1, 2, 3, 4, 5];
-  const maxVal = current * 5 * 1.1;
-  const W = 500, H = 200, pad = { top: 20, right: 20, bottom: 40, left: 50 };
+  const maxVal = Math.max(original, current,improved) * 5 * 1.15;
+  const W = 500, H = 220, pad = { top: 20, right: 20, bottom: 40, left: 50 };
   const chartW = W - pad.left - pad.right;
   const chartH = H - pad.top - pad.bottom;
 
   function toX(i) { return pad.left + (i / 5) * chartW; }
   function toY(v) { return pad.top + chartH - (v / maxVal) * chartH; }
 
-  const currentPoints = years.map(y => ({ x: toX(y), y: toY(current * y) }));
+  const originalPoints = years.map(y => ({ x: toX(y), y: toY(original * y) }));
+  const currentPoints  = years.map(y => ({ x: toX(y), y: toY(current  * y) }));
   const improvedPoints = years.map(y => ({ x: toX(y), y: toY(improved * y) }));
 
-  const currentPath = currentPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const originalPath = originalPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const currentPath  = currentPoints.map((p, i)  => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
   const improvedPath = improvedPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W }}>
+      {/* Grid lines */}
       {[0, 0.25, 0.5, 0.75, 1].map(pct => (
         <line key={pct} x1={pad.left} x2={W - pad.right}
           y1={pad.top + chartH * (1 - pct)} y2={pad.top + chartH * (1 - pct)}
           stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
       ))}
+
+      {/* X-axis labels */}
       {years.map(y => (
-        <text key={y} x={toX(y)} y={H - 10} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="11">
+        <text key={y} x={toX(y)} y={H - 10} textAnchor="middle"
+          fill="rgba(255,255,255,0.4)" fontSize="11">
           {y === 0 ? "Now" : `Y${y}`}
         </text>
       ))}
-      <text x={pad.left - 8} y={pad.top + 4} textAnchor="end" fill="rgba(255,255,255,0.4)" fontSize="10">
+
+      {/* Max value label */}
+      <text x={pad.left - 8} y={pad.top + 4} textAnchor="end"
+        fill="rgba(255,255,255,0.4)" fontSize="10">
         {Math.round(maxVal)}kg
       </text>
-      <path d={currentPath} fill="none" stroke="#ef4444" strokeWidth="2.5" strokeDasharray="6,3" />
+
+      {/* ── PREVIOUS PATH (grey dashed) — always rendered ── */}
+      <>
+        <path d={originalPath} fill="none" stroke="rgba(255,255,255,0.35)"
+          strokeWidth="2" strokeDasharray="4,4" />
+        {originalPoints.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="3.5"
+            fill="rgba(255,255,255,0.35)" />
+        ))}
+      </>
+
+      {/* ── CURRENT PATH (red dashed) ── */}
+      <path d={currentPath} fill="none" stroke="#ef4444"
+        strokeWidth="2.5" strokeDasharray="6,3" />
+      {currentPoints.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="4" fill="#ef4444" />
+      ))}
+
+      {/* ── SUSTAINABLE PATH (mint green solid) ── */}
       <path d={improvedPath} fill="none" stroke="#7EE7C1" strokeWidth="2.5" />
-      {currentPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill="#ef4444" />)}
-      {improvedPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill="#7EE7C1" />)}
-      <g>
-        <rect x={W - 160} y={pad.top} width="140" height="50" rx="6" fill="rgba(0,0,0,0.3)" />
-        <circle cx={W - 148} cy={pad.top + 16} r="5" fill="#ef4444" />
-        <text x={W - 138} y={pad.top + 20} fill="rgba(255,255,255,0.7)" fontSize="11">Current path</text>
-        <circle cx={W - 148} cy={pad.top + 36} r="5" fill="#7EE7C1" />
-        <text x={W - 138} y={pad.top + 40} fill="rgba(255,255,255,0.7)" fontSize="11">Sustainable path</text>
-      </g>
+      {improvedPoints.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="4" fill="#7EE7C1" />
+      ))}
+      <rect x={W - 185} y={pad.top} width="165" height={90}
+        rx="6" fill="rgba(0,0,0,0.35)" />
+
+      {/* Legend — Previous (always shown) */}
+      <>
+        <circle cx={W - 173} cy={pad.top + 14} r="4" fill="rgba(255,255,255,0.4)" />
+        <text x={W - 163} y={pad.top + 18} fill="rgba(255,255,255,0.5)" fontSize="11">
+          Previous path
+        </text>
+      </>
+
+      
+      
+
+      {/* Legend — Current */}
+     
+      <circle cx={W - 173} cy={pad.top + 54} r="4" fill="#7EE7C1" />
+      <text x={W - 163} y={pad.top + 58}
+        fill="rgba(255,255,255,0.7)" fontSize="11">
+        Sustainable path
+      </text>
+      {/* Legend — Sustainable */}
+      <circle cx={W - 173} cy={pad.top + (original !== current ? 54 : 34)} r="4" fill="#7EE7C1" />
+      <text x={W - 163} y={pad.top + (original !== current ? 58 : 38)}
+        fill="rgba(255,255,255,0.7)" fontSize="11">
+        Sustainable path
+      </text>
     </svg>
   );
 }
@@ -343,6 +400,7 @@ export default function EcoLensApp() {
     foodDeliveries: 5, plasticBottles: 7, shoppingOrders: 4,
     clothingPurchases: 3, householdSize: 2, electronicsFreq: 24, disposable: "medium",
   });
+  const [originalResults, setOriginalResults] = useState(null);
   const [results, setResults] = useState(null);
   const [reductions, setReductions] = useState({ food: 30, bottles: 80, shopping: 40, clothing: 50 });
   const [chatOpen, setChatOpen] = useState(false);
@@ -354,6 +412,7 @@ export default function EcoLensApp() {
   const handleAnalyze = () => {
     const r = calculateResults(inputs);
     setResults(r);
+    setOriginalResults(r);
     setTimeout(() => { setShowResults(true); document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }); }, 100);
   };
 
@@ -677,7 +736,11 @@ export default function EcoLensApp() {
                     </div>
                     <div style={{ marginTop: 8 }}>
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 12 }}>5-Year Waste Projection</div>
-                      <FiveYearChart current={results.annualWaste} improved={sim.improved.annualWaste} />
+                      <FiveYearChart 
+                        original={originalResults?.annualWaste || results.annualWaste}
+                        current={results.annualWaste} 
+                        improved={sim.improved.annualWaste} 
+                     />
                     </div>
                   </div>
                 )}
